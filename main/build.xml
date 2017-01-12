@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+
+<project basedir="." default="build" name="nichrome">
+    <property environment="env"/>
+    <property name="junit.output.dir" value="junit"/>
+    <property name="debuglevel" value="source,lines,vars"/>
+    <property name="target" value="1.6"/>
+    <property name="source" value="1.6"/>
+
+    <path id="nichrome.classpath">
+        <pathelement location="bin"/>
+        <pathelement location="lib/postgresql-8.4-701.jdbc4.jar"/>
+        <pathelement location="lib/antlr-3.2.jar"/>
+        <pathelement location="lib/args4j-2.33.jar"/>
+        <pathelement location="lib/commons-lang3-3.0-beta.jar"/>
+        <pathelement location="lib/jgrapht-jdk1.6.jar"/>
+        <pathelement location="lib/commons-math-2.2.jar"/>
+        <pathelement location="lib/gurobi.jar"/>
+        <pathelement location="lib/trove-3.0.2.jar"/>
+        <pathelement location="lib/scannotation-1.0.2.jar"/>
+        <pathelement location="lib/javabdd-1.0b2.jar"/>
+        <pathelement location="lib/javassist.jar"/>
+    </path>
+
+    <target name="init">
+        <mkdir dir="bin"/>
+        <copy includeemptydirs="false" todir="bin">
+            <fileset dir="src">
+                <exclude name="**/*.launch"/>
+                <exclude name="**/*.java"/>
+            </fileset>
+        </copy>
+    </target>
+    <target name="clean">
+        <delete dir="bin"/>
+    </target>
+
+    <target depends="clean" name="cleanall"/>
+
+    <target depends="build-subprojects,build-project" name="build"/>
+
+    <target name="build-subprojects"/>
+
+    <target depends="init" name="build-project">
+        <echo message="${ant.project.name}: ${ant.file}"/>
+        <javac includeantruntime="false" debug="true" debuglevel="${debuglevel}" destdir="bin" source="${source}" target="${target}">
+            <src path="src"/>
+            <classpath refid="nichrome.classpath"/>
+        </javac>
+    </target>
+
+    <target name="Main">
+        <java classname="nichrome.mln.driver.Main" failonerror="true" fork="yes">
+            <classpath refid="nichrome.classpath"/>
+            <arg value="-help"/>
+        </java>
+    </target>
+
+
+    <target name="dist" depends="build" description="generate the distribution with libraries included">
+      <jar jarfile="nichrome.jar" basedir="bin"> 
+	<manifest> 
+	  <attribute name="Main-Class" value="nichrome.mln.driver.Main"/>
+	</manifest>
+	<zipgroupfileset dir="lib" includes="**/*.jar"/>
+      </jar>
+    </target>
+
+
+    <target name="dist-wo-lib" depends="Main"
+        description="generate the distribution" >
+
+        <manifestclasspath property="jar.classpath" jarfile="nichrome.jar">
+            <classpath refid="nichrome.classpath"/>
+        </manifestclasspath>
+
+        <jar jarfile="nichrome.jar" basedir="bin">
+            <manifest>
+                <attribute name="Main-Class" value="nichrome.mln.driver.Main"/>
+                <attribute name="Class-Path" value="${jar.classpath}" />
+            </manifest>
+
+        </jar>
+    </target>
+
+    <target name="worker"
+        description="generate the distribution with worker as main" >
+
+        <manifestclasspath property="jar.classpath" jarfile="worker.jar">
+            <classpath refid="nichrome.classpath"/>
+        </manifestclasspath>
+
+        <jar jarfile="worker.jar" basedir="bin">
+            <manifest>
+                <attribute name="Main-Class" value="nichrome.mln.infer.LazySolverParallelWorker"/>
+                <attribute name="Class-Path" value="${jar.classpath}" />
+            </manifest>
+
+        </jar>
+    </target>
+</project>

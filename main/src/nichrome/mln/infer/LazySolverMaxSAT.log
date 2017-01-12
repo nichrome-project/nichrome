@@ -1,0 +1,649 @@
+
+------------------------------------------------------------------------
+r3681 | rmangal | 2014-09-23 23:25:21 -0400 (Tue, 23 Sep 2014) | 1 line
+
+Learning algo
+------------------------------------------------------------------------
+package edu.gatech.mln.infer;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.util.HashSet;
+import java.util.Scanner;
+import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
+
+import org.apache.commons.lang3.Pair;
+
+import edu.gatech.mln.GClause;
+import edu.gatech.mln.MarkovLogicNetwork;
+import edu.gatech.mln.util.Config;
+import edu.gatech.mln.util.Timer;
+import edu.gatech.mln.util.UIMan;
+
+public class LazySolverMaxSAT extends LazySolver {
+
+	/**
+	 * See http://maxsat.ia.udl.cat/requirements/ nbvar: number of variables
+	 * nbclauses: number of clauses top: hard constraint weight = sum of soft
+	 * weights + 1
+	 */
+	private long nbvar = 0;
+	private long nbclauses = 0;
+	private long top = (long) Config.hard_weight;
+
+	public LazySolverMaxSAT(MarkovLogicNetwork mln) {
+		super(mln);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see edu.gatech.mln.infer.LazyInferer#infer(java.util.Set)
+	 */
+	@Override
+	public Pair<Double, Set<Integer>> solve(Set<GClause> gcs) {
+		if (gcs == null || gcs.isEmpty()) {
+			return new Pair<Double, Set<Integer>>(0.0, new HashSet<Integer>());
+		}
+		File consFile =
+			new File(Config.dir_working + File.separator + this.hashCode()
+				+ "_mifu.wcnf");
+		try {
+			String genInTimer = "Maxsat input timer";
+			Timer.start(genInTimer);
+			PrintWriter pw = new PrintWriter(consFile);
+			pw.println("c mln inference: lazy grouding");
+			// Calculate the num of rules and variables
+			this.calculateStats(gcs);
+			pw.println("p wcnf " + this.nbvar + " " + this.nbclauses + " "
+				+ this.top);
+			double totalWeight = 0.0;
+			for (GClause gc : gcs) {
+				if (gc.isHardClause()) {
+					pw.print(this.top);
+				} else {
+					double w = gc.weight;
+					pw.print((int) w);
+					totalWeight += w;
+				}
+				for (int lit : gc.lits) {
+					pw.print(" " + lit);
+				}
+				pw.println(" 0");
+			}
+			pw.flush();
+			pw.close();
+			if (Config.verbose_level >= 1) {
+				Timer.printElapsed(genInTimer);
+			}
+
+			String cmd[] = new String[2];
+			cmd[0] = Config.maxsat_path;
+			cmd[1] = consFile.getAbsolutePath();
+			UIMan.verbose(1, "Start the MAXSAT solver:");
+			String maxsatTimer = "MAXSAT";
+			Timer.start(maxsatTimer);
+			ProcessBuilder pb = new ProcessBuilder(cmd[0], cmd[1]);
+			pb.redirectErrorStream(true);
+			final Process p = pb.start();
+			ResultInterpreter ri =
+				new ResultInterpreter(p.getInputStream(), totalWeight);
+
+			Future<Pair<Double, Set<Integer>>> futureResult =
+				Config.executor.submit(ri);
+
+			if (p.waitFor() != 0) {
+				throw new RuntimeException(
+					"The MAXSAT solver did not terminate normally");
+			}
+
+			Pair<Double, Set<Integer>> ret = futureResult.get();
+
+			// if(ret.left != this.evaluate(ret.right, gcs)){
+			// throw new
+			// RuntimeException("Something wrong with objective function evaluation!");
+			// }
+
+			if (p != null) {
+				if (p.getOutputStream() != null) {
+					p.getOutputStream().close();
+				}
+				if (p.getErrorStream() != null) {
+					p.getErrorStream().close();
+				}
+				if (p.getInputStream() != null) {
+					p.getInputStream().close();
+				}
+				p.destroy();
+			}
+			if (Config.verbose_level >= 1) {
+				Timer.printElapsed(maxsatTimer);
+			}
+			return ret;
+			// return interpreteResult(result);
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new RuntimeException(e);
+		}
+	}
+
+	/**
+	 * @deprecated Return the variables set to true.
+	 * @param result
+	 * @return
+	 */
+	@Deprecated
+	private Set<Integer> interpreteResult(File result) {
+		String interOutTimer = "Maxsat output timer";
+		Timer.start(interOutTimer);
+		try {
+			Scanner sc = new Scanner(result);
+			Set<Integer> ret = new HashSet<Integer>();
+			while (sc.hasNext()) {
+				String line = sc.nextLine();
+				if (line.startsWith("s ")) {
+					if (line.startsWith("s UNSATISFIABLE")) {
+						return null;
+					}
+					if (!line.startsWith("s OPTIMUM FOUND")) {
+						throw new RuntimeException(
+							"Expecting a solution but got " + line);
+					}
+				}
+				if (line.startsWith("v ")) {
+					Scanner lineSc = new Scanner(line);
+					String c = lineSc.next();
+					if (!c.trim().equals("v")) {
+						throw new RuntimeException(
+							"Expected char of a solution line: " + c);
+					}
+					while (lineSc.hasNext()) {
+						int i = lineSc.nextInt();
+						if (i < 0) {
+						} else {
+							ret.add(i);
+						}
+					}
+				}
+			}
+			if (Config.verbose_level >= 1) {
+				Timer.printElapsed(interOutTimer);
+			}
+			return ret;
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+			throw new RuntimeException(e);
+		}
+	}
+
+	private void calculateStats(Set<GClause> gcs) {
+		this.nbclauses = gcs.size();
+		Set<Integer> atomSet = new HashSet<Integer>();
+		this.top = 0;
+		for (GClause gc : gcs) {
+			if (!gc.isHardClause()) {
+				this.top += gc.weight;
+			}
+			for (int l : gc.lits) {
+				atomSet.add(Math.abs(l));
+			}
+		}
+		this.nbvar = atomSet.size();
+		this.top++;
+		if (this.top < 0) {
+			UIMan.verbose(1,
+				"The sum of weights of soft constraints overflows, set it to "
+					+ Config.hard_weight);
+			this.top = (long) Config.hard_weight;
+		}
+	}
+
+	class ResultInterpreter implements Callable<Pair<Double, Set<Integer>>> {
+		private InputStream resultStream;
+		private double totalWeight;
+
+		public ResultInterpreter(InputStream resultStream, double totalWeight) {
+			this.resultStream = resultStream;
+			this.totalWeight = totalWeight;
+		}
+
+		@Override
+		public Pair<Double, Set<Integer>> call() throws Exception {
+			BufferedReader in =
+				new BufferedReader(new InputStreamReader(this.resultStream));
+			Set<Integer> sol = new HashSet<Integer>();
+			double unsatWeight = 0.0;
+			String line;
+			while ((line = in.readLine()) != null) {
+				if (line.startsWith("s ")) {
+					if (line.startsWith("s UNSATISFIABLE")) {
+						return null;
+					}
+					if (!line.startsWith("s OPTIMUM FOUND")) {
+						throw new RuntimeException(
+							"Expecting a solution but got " + line);
+					}
+				}
+				if (line.startsWith("o ")) {
+					String lsplits[] = line.split(" ");
+					unsatWeight = Double.parseDouble(lsplits[1]);
+				}
+				if (line.startsWith("v ")) {
+					String[] lsplits = line.split(" ");
+					for (String s : lsplits) {
+						s = s.trim();
+						if (s.equals("v")) {
+							continue;
+						}
+						int i = Integer.parseInt(s);
+						if (i > 0) {
+							sol.add(i);
+						}
+					}
+				}
+			}
+			in.close();
+			Pair<Double, Set<Integer>> ret =
+				new Pair<Double, Set<Integer>>(this.totalWeight - unsatWeight,
+					sol);
+			return ret;
+		}
+	}
+
+}
+
+
+------------------------------------------------------------------------
+r3783 | rmangal | 2014-10-03 17:10:55 -0400 (Fri, 03 Oct 2014) | 1 line
+
+latest changes including generating multiple solutions with blocking and handling of negative weights
+------------------------------------------------------------------------
+Index: LazySolverMaxSAT.java
+===================================================================
+--- LazySolverMaxSAT.java	(revision 3782)
++++ LazySolverMaxSAT.java	(revision 3783)
+@@ -6,7 +6,9 @@
+ import java.io.InputStream;
+ import java.io.InputStreamReader;
+ import java.io.PrintWriter;
++import java.util.ArrayList;
+ import java.util.HashSet;
++import java.util.List;
+ import java.util.Scanner;
+ import java.util.Set;
+ import java.util.concurrent.Callable;
+@@ -29,6 +31,7 @@
+ 	 */
+ 	private long nbvar = 0;
+ 	private long nbclauses = 0;
++	private int highestVarId = 0;
+ 	private long top = (long) Config.hard_weight;
+ 
+ 	public LazySolverMaxSAT(MarkovLogicNetwork mln) {
+@@ -40,9 +43,11 @@
+ 	 * @see edu.gatech.mln.infer.LazyInferer#infer(java.util.Set)
+ 	 */
+ 	@Override
+-	public Pair<Double, Set<Integer>> solve(Set<GClause> gcs) {
++	public List<Pair<Double, Set<Integer>>> solve(Set<GClause> gcs) {
++		ArrayList<Pair<Double, Set<Integer>>> ret = new ArrayList<Pair<Double, Set<Integer>>>();
+ 		if (gcs == null || gcs.isEmpty()) {
+-			return new Pair<Double, Set<Integer>>(0.0, new HashSet<Integer>());
++			ret.add(new Pair<Double, Set<Integer>>(0.0, new HashSet<Integer>()));
++			return ret;
+ 		}
+ 		File consFile =
+ 			new File(Config.dir_working + File.separator + this.hashCode()
+@@ -57,18 +62,49 @@
+ 			pw.println("p wcnf " + this.nbvar + " " + this.nbclauses + " "
+ 				+ this.top);
+ 			double totalWeight = 0.0;
++			Set<Integer> tseitinLits = new HashSet<Integer>();
++			int nextTseitinLitId = this.highestVarId + 1;
+ 			for (GClause gc : gcs) {
+-				if (gc.isHardClause()) {
++				if (gc.isPositiveClause()) {
++					if (gc.isHardClause()) {
++						pw.print(this.top);
++					} else {
++						double w = gc.weight;
++						pw.print((int) w);
++						totalWeight += w;
++					}
++					for (int lit : gc.lits) {
++						pw.print(" " + lit);
++					}
++					pw.println(" 0");
++				} else {
++					//Apply Tseitin transformation
++					int newTseitinLitId = nextTseitinLitId++;
++					tseitinLits.add(newTseitinLitId);
+ 					pw.print(this.top);
+-				} else {
+-					double w = gc.weight;
+-					pw.print((int) w);
+-					totalWeight += w;
++					for (int lit : gc.lits) {
++						pw.print(" " + lit);
++					}
++					pw.print(" " + newTseitinLitId);
++					pw.println(" 0");
++					
++					for (int lit : gc.lits) {
++						pw.print(this.top);
++						pw.print(" " + -newTseitinLitId);
++						pw.print(" " + -lit);
++						pw.println(" 0");
++					}
++					
++					if (gc.isHardClause()) {
++						pw.print(this.top);
++					} else {
++						double w = -gc.weight;
++						pw.print((int) w);
++						totalWeight += w;
++					}
++					pw.print(" " + newTseitinLitId);
++					pw.println(" 0");
+ 				}
+-				for (int lit : gc.lits) {
+-					pw.print(" " + lit);
+-				}
+-				pw.println(" 0");
+ 			}
+ 			pw.flush();
+ 			pw.close();
+@@ -96,9 +132,13 @@
+ 					"The MAXSAT solver did not terminate normally");
+ 			}
+ 
+-			Pair<Double, Set<Integer>> ret = futureResult.get();
++			Pair<Double, Set<Integer>> retP = futureResult.get();
++			if (retP != null) {
++				retP.right.removeAll(tseitinLits);
++			}
++			ret.add(retP);
+ 
+-			// if(ret.left != this.evaluate(ret.right, gcs)){
++			// if(retP.left != this.evaluate(retP.right, gcs)){
+ 			// throw new
+ 			// RuntimeException("Something wrong with objective function evaluation!");
+ 			// }
+@@ -132,7 +172,7 @@
+ 	 * @return
+ 	 */
+ 	@Deprecated
+-	private Set<Integer> interpreteResult(File result) {
++	private Set<Integer> interpretResult(File result) {
+ 		String interOutTimer = "Maxsat output timer";
+ 		Timer.start(interOutTimer);
+ 		try {
+@@ -181,9 +221,12 @@
+ 		this.top = 0;
+ 		for (GClause gc : gcs) {
+ 			if (!gc.isHardClause()) {
+-				this.top += gc.weight;
++				this.top += Math.abs(gc.weight);
+ 			}
+ 			for (int l : gc.lits) {
++				if (Math.abs(l) > this.highestVarId) {
++					this.highestVarId = Math.abs(l);
++				}
+ 				atomSet.add(Math.abs(l));
+ 			}
+ 		}
+
+
+------------------------------------------------------------------------
+r4309 | xzhang | 2015-05-27 14:51:33 -0400 (Wed, 27 May 2015) | 1 line
+
+fix an issue in MaxSAT encoding that will degrade the performance of MifuMax
+------------------------------------------------------------------------
+Index: LazySolverMaxSAT.java
+===================================================================
+--- LazySolverMaxSAT.java	(revision 4308)
++++ LazySolverMaxSAT.java	(revision 4309)
+@@ -7,8 +7,10 @@
+ import java.io.InputStreamReader;
+ import java.io.PrintWriter;
+ import java.util.ArrayList;
++import java.util.HashMap;
+ import java.util.HashSet;
+ import java.util.List;
++import java.util.Map;
+ import java.util.Scanner;
+ import java.util.Set;
+ import java.util.concurrent.Callable;
+@@ -33,7 +35,15 @@
+ 	private long nbclauses = 0;
+ 	private int highestVarId = 0;
+ 	private long top = (long) Config.hard_weight;
+-
++	/**
++	 * old var id -> new var id
++	 */
++	private Map<Integer,Integer> varIdMap;
++	/**
++	 * new var id -> old var id
++	 */
++	private List<Integer> varList;
++	
+ 	public LazySolverMaxSAT(MarkovLogicNetwork mln) {
+ 		super(mln);
+ 	}
+@@ -49,6 +59,7 @@
+ 			ret.add(new Pair<Double, Set<Integer>>(0.0, new HashSet<Integer>()));
+ 			return ret;
+ 		}
++		this.buildVarIdMap(gcs);
+ 		File consFile =
+ 			new File(Config.dir_working + File.separator + this.hashCode()
+ 				+ "_mifu.wcnf");
+@@ -74,7 +85,7 @@
+ 						totalWeight += w;
+ 					}
+ 					for (int lit : gc.lits) {
+-						pw.print(" " + lit);
++						pw.print(" " + this.getNewLit(lit));
+ 					}
+ 					pw.println(" 0");
+ 				} else {
+@@ -83,7 +94,7 @@
+ 					tseitinLits.add(newTseitinLitId);
+ 					pw.print(this.top);
+ 					for (int lit : gc.lits) {
+-						pw.print(" " + lit);
++						pw.print(" " + this.getNewLit(lit));
+ 					}
+ 					pw.print(" " + newTseitinLitId);
+ 					pw.println(" 0");
+@@ -91,7 +102,7 @@
+ 					for (int lit : gc.lits) {
+ 						pw.print(this.top);
+ 						pw.print(" " + -newTseitinLitId);
+-						pw.print(" " + -lit);
++						pw.print(" " + -this.getNewLit(lit));
+ 						pw.println(" 0");
+ 					}
+ 					
+@@ -215,22 +226,54 @@
+ 		}
+ 	}
+ 
++	private void buildVarIdMap(Set<GClause> gcs){
++		varIdMap = new HashMap<Integer, Integer>();
++		varList = new ArrayList<Integer>();
++		varList.add(null);//Skip 0 in id list
++		for(GClause gc : gcs)
++			for(int l : gc.lits){
++				int at = Math.abs(l);
++				if(!varIdMap.containsKey(at)){
++					varIdMap.put(at, varList.size());
++					varList.add(at);
++				}
++			}
++	}
++	
++	public int getNewLit(int oldLit){
++		if(oldLit > 0)
++			return varIdMap.get(oldLit);
++		if(oldLit < 0)
++			return -varIdMap.get(0-oldLit);
++		throw new RuntimeException("Var id cannot be 0.");
++	}
++	
++	public int getOldLit(int newLit){
++		if(newLit > 0)
++			return varList.get(newLit);
++		if(newLit < 0)
++			return -varList.get(0-newLit);
++		throw new RuntimeException("Var id cannot be 0.");
++	}
++	
+ 	private void calculateStats(Set<GClause> gcs) {
+ 		this.nbclauses = gcs.size();
+-		Set<Integer> atomSet = new HashSet<Integer>();
++//		Set<Integer> atomSet = new HashSet<Integer>();
+ 		this.top = 0;
+ 		for (GClause gc : gcs) {
+ 			if (!gc.isHardClause()) {
+ 				this.top += Math.abs(gc.weight);
+ 			}
+-			for (int l : gc.lits) {
+-				if (Math.abs(l) > this.highestVarId) {
+-					this.highestVarId = Math.abs(l);
+-				}
+-				atomSet.add(Math.abs(l));
+-			}
++//			for (int l : gc.lits) {
++//				if (Math.abs(l) > this.highestVarId) {
++//					this.highestVarId = Math.abs(l);
++//				}
++//				atomSet.add(Math.abs(l));
++//			}
+ 		}
+-		this.nbvar = atomSet.size();
++//		this.nbvar = atomSet.size();
++		this.nbvar = this.varList.size()-1;
++		this.highestVarId = this.varList.size()-1;
+ 		this.top++;
+ 		if (this.top < 0) {
+ 			UIMan.verbose(1,
+@@ -279,7 +322,7 @@
+ 						}
+ 						int i = Integer.parseInt(s);
+ 						if (i > 0) {
+-							sol.add(i);
++							sol.add(getOldLit(i));
+ 						}
+ 					}
+ 				}
+
+
+------------------------------------------------------------------------
+r4315 | xzhang | 2015-05-28 17:37:49 -0400 (Thu, 28 May 2015) | 1 line
+
+1. Add options to save ILP models. 2. When using ilp as the solver, allow to find suboptimal solution in the checking phase.
+------------------------------------------------------------------------
+Index: LazySolverMaxSAT.java
+===================================================================
+--- LazySolverMaxSAT.java	(revision 4314)
++++ LazySolverMaxSAT.java	(revision 4315)
+@@ -335,4 +335,15 @@
+ 		}
+ 	}
+ 
++	@Override
++	public Pair<Double, Set<Integer>> refine(Set<GClause> checkSet,
++			Set<Integer> right, Double left) {
++		Pair<Double,Set<Integer>> refined = this.solve(checkSet).get(0);
++		if(Math.abs(refined.left-left) < 0.1 )
++			return null;
++		if(refined.left < left)
++			 throw new RuntimeException("The provided objective function is not achievable: "+left);
++		return refined;
++	}
++	
+ }
+
+
+------------------------------------------------------------------------
+r4415 | xzhang | 2015-06-16 21:39:27 -0400 (Tue, 16 Jun 2015) | 1 line
+
+update
+------------------------------------------------------------------------
+Index: LazySolverMaxSAT.java
+===================================================================
+--- LazySolverMaxSAT.java	(revision 4414)
++++ LazySolverMaxSAT.java	(revision 4415)
+@@ -72,6 +72,7 @@
+ 			this.calculateStats(gcs);
+ 			pw.println("p wcnf " + this.nbvar + " " + this.nbclauses + " "
+ 				+ this.top);
++			UIMan.verbose(1, "Solving a MaxSAT problem of "+this.nbvar+" variables and "+this.nbclauses+" clauses.");
+ 			double totalWeight = 0.0;
+ 			Set<Integer> tseitinLits = new HashSet<Integer>();
+ 			int nextTseitinLitId = this.highestVarId + 1;
+
+
+------------------------------------------------------------------------
+r4417 | xzhang | 2015-06-16 23:11:09 -0400 (Tue, 16 Jun 2015) | 1 line
+
+minor
+------------------------------------------------------------------------
+Index: LazySolverMaxSAT.java
+===================================================================
+--- LazySolverMaxSAT.java	(revision 4416)
++++ LazySolverMaxSAT.java	(revision 4417)
+@@ -127,6 +127,7 @@
+ 			String cmd[] = new String[2];
+ 			cmd[0] = Config.maxsat_path;
+ 			cmd[1] = consFile.getAbsolutePath();
++			UIMan.verbose(2, "Using solver: "+Config.maxsat_path);
+ 			UIMan.verbose(1, "Start the MAXSAT solver:");
+ 			String maxsatTimer = "MAXSAT";
+ 			Timer.start(maxsatTimer);
+
+
+------------------------------------------------------------------------
+r4473 | xzhang | 2015-06-23 22:30:47 -0400 (Tue, 23 Jun 2015) | 1 line
+
+more
+------------------------------------------------------------------------
+Index: LazySolverMaxSAT.java
+===================================================================
+--- LazySolverMaxSAT.java	(revision 4472)
++++ LazySolverMaxSAT.java	(revision 4473)
+@@ -86,6 +86,7 @@
+ 						totalWeight += w;
+ 					}
+ 					for (int lit : gc.lits) {
++						pw.print(gc.toString());
+ 						pw.print(" " + this.getNewLit(lit));
+ 					}
+ 					pw.println(" 0");
+
+
+------------------------------------------------------------------------
+r4474 | xzhang | 2015-06-23 22:35:24 -0400 (Tue, 23 Jun 2015) | 1 line
+
+fix a bug introduced by accident
+------------------------------------------------------------------------
+Index: LazySolverMaxSAT.java
+===================================================================
+--- LazySolverMaxSAT.java	(revision 4473)
++++ LazySolverMaxSAT.java	(revision 4474)
+@@ -86,7 +86,6 @@
+ 						totalWeight += w;
+ 					}
+ 					for (int lit : gc.lits) {
+-						pw.print(gc.toString());
+ 						pw.print(" " + this.getNewLit(lit));
+ 					}
+ 					pw.println(" 0");
+

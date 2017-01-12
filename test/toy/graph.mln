@@ -1,0 +1,14 @@
+// graph.mln
+// Define the relations. The "*" means closed-world assumption holds for the specified relation. Otherwise, open-world assumption is applied.
+*edge(node,node)
+path(node,node)
+
+// Reflexivity
+path(n,n).
+// If there is a edge from n1 to n2, and there is a path from n2 to n3, then there is a path from n1 to n3. 
+// This rule can also be written as 
+// !edge(n1,n2) v !path(n2,n3) v path(n1,n3)
+edge(n1,n2),path(n2,n3) => path(n1,n3).
+
+// Least-fix-point contraint. Do not derive unnecessary paths.
+1 !path(n1,n2)

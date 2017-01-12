@@ -1,0 +1,4 @@
+// graph.edb
+edge(a,b)
+edge(b,c)
+

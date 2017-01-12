@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+
+<project basedir="." default="test" name="nichrome_test">
+  <property environment="env"/>
+
+  <property name="nichrome.home.dir" location="${env.NICHROME_MAIN}"/>
+
+  <target name="test">
+    <echo message="test graph ... " />
+    <ant dir="${nichrome.home.dir}" target="dist"/>
+    <java classname="nichrome.mln.driver.Main" failonerror="true" fork="yes">
+      <classpath> 
+	<pathelement location="${nichrome.home.dir}/nichrome.jar" />
+      </classpath>
+      <arg line="-conf nichrome.conf"/>
+      <arg line="-e graph.edb" />
+      <arg line="-r result.txt" />
+      <arg line="-i graph.mln" />
+      <arg line="-verbose 2" />
+      <arg line="-solver lbxmcs" />
+      <arg line="-lbxTimeout 18000" />
+      <arg line="-lbxLimit 1" />
+      <arg value="-printVio" />
+    </java>
+  </target>
+
+</project>
+
