@@ -1,6 +1,10 @@
 # ignore temp files
 *~
 
+# ignore eclipse configs
+.project
+.classpath
+
 # ignore incubator directory
 incubator/
 nichrome_incubator/

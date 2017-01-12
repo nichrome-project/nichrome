@@ -33,6 +33,7 @@
     </target>
     <target name="clean">
         <delete dir="bin"/>
+	<delete file="nichrome.jar"/>
     </target>
 
     <target depends="clean" name="cleanall"/>
