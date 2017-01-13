@@ -310,7 +310,7 @@ public class CommandOptions {
 	 * Misc
 	 */
 	@Option(name = "-conf",
-		usage = "Path of the configuration file. Default='./eugene.conf'")
+		usage = "Path of the configuration file. Default='./nichrome.conf'")
 	public String pathConf = null;
 
 	@Option(name = "-help", usage = "Display command options.")

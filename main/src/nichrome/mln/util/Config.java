@@ -120,7 +120,7 @@ public class Config {
 
 	public static String product_line = "Nichrome";
 	public static String product_name = "Nichrome 0.1";
-	public static String path_conf = "./eugene.conf";
+	public static String path_conf = "./nichrome.conf";
 
 	public static boolean snapshot_mode = false;
 	public static boolean snapshoting_so_do_not_do_init_flip = false;
