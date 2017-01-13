@@ -41,7 +41,7 @@ public class CommandOptions {
 			"-parallel",
 			
 			/*Learning-related options*/
-			"-learnt", "-lMaxIter",
+			"-learnwt", "-lMaxIter",
 			};
 
 	public static OptionHandlerFilter showToOutsider = new OptionHandlerFilter() {
