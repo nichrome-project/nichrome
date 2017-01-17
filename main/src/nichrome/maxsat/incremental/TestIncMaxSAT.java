@@ -1,4 +1,4 @@
-package nichrome.mln.driver;
+package nichrome.maxsat.incremental;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
