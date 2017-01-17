@@ -1,17 +1,19 @@
 package nichrome.alps;
 
+import java.io.File;
+
 public class ALPSInterface {
 	static {
 		//System.out.println(System.getProperty("java.library.path"));
 		System.loadLibrary("alps");
 	}
 
-	String templateFile;
-	String dataFile;
-	int K;
-	int M;
-	boolean enableG;
-	boolean enableS;
+	protected String templateFile;
+	protected String dataFile;
+	protected int K;
+	protected int M;
+	protected boolean enableG;
+	protected boolean enableS;
 
 
 	public static void main(String [] args) {
@@ -30,6 +32,22 @@ public class ALPSInterface {
 	
 	
 	public void learn() {
+		
+		// check if template and data file exists
+		{
+			File templF = new File(templateFile);
+			if(!templF.exists()) {
+				System.err.println("Error: Cannot find template file: " + templateFile);
+				return;
+			}
+			
+			File dataF = new File(dataFile);
+			if(!dataF.exists()) {
+				System.err.println("Error: Cannot find data file: " + dataFile);
+				return;
+			}
+		}
+		
 		int mode = 0;
 		if(enableS) mode |= 1;
 		if(enableG) mode |= 2;
