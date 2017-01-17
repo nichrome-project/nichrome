@@ -67,6 +67,15 @@
       </jar>
     </target>
 
+    <target name="test" depends="build" description="generate the distribution with libraries included">
+      <jar jarfile="nichrome.jar" basedir="bin"> 
+	<manifest> 
+	  <attribute name="Main-Class" value="nichrome.util.CommandLineEntry"/>
+	</manifest>
+	<zipgroupfileset dir="lib" includes="**/*.jar"/>
+      </jar>
+    </target>
+
 
     <target name="dist-wo-lib" depends="Main"
         description="generate the distribution" >

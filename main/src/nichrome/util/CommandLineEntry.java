@@ -12,6 +12,7 @@ import org.kohsuke.args4j.spi.SubCommands;
 
 import nichrome.alps.ALPSCommandLine;
 import nichrome.maxsat.incremental.MaxSATCommandLine;
+import nichrome.mln.driver.MLNCommandLine;
 
 
 public class CommandLineEntry {
@@ -21,13 +22,14 @@ public class CommandLineEntry {
 	final static String MaxSAT = "MaxSAT";
 	final static String MLN = "MLN";
 	
-	@Option(name = "-h", aliases="-help", usage = "Display command options.")
+	@Option(name = "-h", aliases="-help", usage = "display command options.")
 	public boolean showHelp = false;
 
-    @Argument(required=true,index=0,metaVar="engine",usage="engines, specify which engine to use",handler=SubCommandHandler.class)
+    @Argument(required=true,index=0,metaVar="engine",usage="specify which engine to use",handler=SubCommandHandler.class)
     @SubCommands({
       @SubCommand(name=ALPS,impl=ALPSCommandLine.class),
       @SubCommand(name=MaxSAT,impl=MaxSATCommandLine.class),
+      @SubCommand(name=MLN,impl=MLNCommandLine.class),
     })
     CommandInterface engine;
 
@@ -45,15 +47,22 @@ public class CommandLineEntry {
             	if(s.equalsIgnoreCase(ALPS)) {
             		new ALPSCommandLine().printUsage();
             	}
+            	else if(s.equalsIgnoreCase(MLN)) {
+            		new MLNCommandLine().printUsage();
+            	}
             	else if(s.equalsIgnoreCase(MaxSAT)) {
             		CmdLineParser p = new CmdLineParser(new MaxSATCommandLine());
+            		System.err.println("\n------\nUsage: ");
             		p.printUsage(System.err);
             	}
             	else {
             		System.err.println("\n------\nUsage: ");
             		parser.printUsage(System.err);
             	}
-            	
+            }
+            else{
+            	System.err.println("\n------\nUsage: ");
+        		parser.printUsage(System.err);
             }
         }
 
