@@ -5,12 +5,13 @@ import org.kohsuke.args4j.OptionHandlerFilter;
 import org.kohsuke.args4j.spi.OptionHandler;
 
 import nichrome.mln.util.Config;
+import nichrome.util.AbstractBaseCommand;
 
 /**
  * TODO: the old tuffy options need clean-up 
  * Parser for command line options.
  */
-public class CommandOptions {
+public class CommandOptions extends AbstractBaseCommand {
 
 	public enum MAPInferAlgo {
 		WALK, SWEEP
