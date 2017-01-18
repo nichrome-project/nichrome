@@ -58,7 +58,7 @@
     </target>
 
 
-    <target name="dist" depends="build" description="generate the distribution with libraries included">
+    <target name="dist-mln" depends="build" description="generate the distribution with libraries included">
       <jar jarfile="nichrome.jar" basedir="bin"> 
 	<manifest> 
 	  <attribute name="Main-Class" value="nichrome.mln.driver.Main"/>
@@ -67,7 +67,7 @@
       </jar>
     </target>
 
-    <target name="test" depends="build" description="generate the distribution with libraries included">
+    <target name="dist" depends="build" description="generate the distribution with libraries included">
       <jar jarfile="nichrome.jar" basedir="bin"> 
 	<manifest> 
 	  <attribute name="Main-Class" value="nichrome.util.CommandLineEntry"/>

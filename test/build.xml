@@ -8,7 +8,7 @@
 
 
   <target name="build_nichrome">
-    <ant dir="${nichrome.home.dir}" target="test"/>
+    <ant dir="${nichrome.home.dir}" target="dist"/>
     <echo message="test engines: MLN, ALPS  ... " />
   </target>
 
