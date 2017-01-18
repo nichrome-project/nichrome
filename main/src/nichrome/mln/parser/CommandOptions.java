@@ -310,7 +310,7 @@ public class CommandOptions extends AbstractBaseCommand {
 	/**
 	 * Misc
 	 */
-	@Option(name = "-conf",
+	@Option(name = "-conf", required=true,
 		usage = "Path of the configuration file. Default='./nichrome.conf'")
 	public String pathConf = null;
 
