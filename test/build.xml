@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+
+<project basedir="." default="test" name="nichrome_test">
+  <property environment="env"/>
+
+  <!--property name="nichrome.home.dir" location="${env.NICHROME_MAIN}"/ -->
+  <property name="nichrome.home.dir" location="../main"/>
+
+
+  <target name="build_nichrome">
+    <ant dir="${nichrome.home.dir}" target="test"/>
+    <echo message="test engines: MLN, ALPS  ... " />
+  </target>
+
+  <target name="test" depends="build_nichrome,test_mln,test_alps" />
+
+  <target name="test_mln">
+    <echo message="test mln engine on simple graph ... " />
+    <java jar="${nichrome.home.dir}/nichrome.jar" failonerror="true" fork="yes">
+      <arg line="MLN" />
+      <!--arg line="-conf /home/xujie/Projects/mlninference/eugene.conf"/ -->
+	  <arg line="-conf nichrome.conf"/>
+      <arg line="-e mln_graph/graph.edb" />
+      <arg line="-r result.txt" />
+      <arg line="-i mln_graph/graph.mln" />
+      <arg line="-verbose 2" />
+      <arg line="-solver lbxmcs" />
+      <arg line="-lbxTimeout 18000" />
+      <arg line="-lbxLimit 1" />
+      <arg value="-printVio" />
+    </java>
+  </target>
+
+
+  <target name="test_alps">
+    <java jar="${nichrome.home.dir}/nichrome.jar" failonerror="true" fork="yes">
+      <sysproperty key="java.library.path" path="${nichrome.home.dir}/lib"/>
+      <arg line="ALPS" />
+      <arg line="-K 2" />
+      <arg line="-T alps_path/template.t" />
+      <arg line="-D alps_path/path.d" />
+    </java>
+  </target>
+
+</project>
+

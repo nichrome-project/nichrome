@@ -1,0 +1,18 @@
+// 0 Optimum value: 3.0
+// 1 The following variables should be set to true: 
+edge(a,b)
+edge(b,c)
+path(a,a)
+path(b,b)
+path(c,c)
+path(b,c)
+path(a,b)
+path(a,c)
+
+// 2 The following grounded clauses are not satified: 
+// 1.0: NOT path(a,c)
+// 1.0: NOT path(a,b)
+// 1.0: NOT path(b,b)
+// 1.0: NOT path(a,a)
+// 1.0: NOT path(b,c)
+// 1.0: NOT path(c,c)
