@@ -29,7 +29,7 @@ public class CommandLineEntry {
     @SubCommands({
       @SubCommand(name=ALPS,impl=ALPSCommandLine.class),
       @SubCommand(name=MaxSAT,impl=MaxSATCommandLine.class),
-      @SubCommand(name=MLN,impl=MLNCommandLine.class),
+      @SubCommand(name=MLN,impl=MLNCommandLine.class)
     })
     CommandInterface engine;
 
