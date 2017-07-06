@@ -1,0 +1,28 @@
+# Author: Ravi Mangal
+# name=thresc-dlog
+
+.include "E.dom"
+
+.bddvarorder E0xE1
+
+###
+# Relations
+###
+
+localE(e:E) input
+escE(e:E) input
+OrderedEE(e1:E0,e2:E1) input
+
+escEDep(e:E) output
+localEDep(e:E) output
+
+###
+# Constraints
+###
+
+escEDep(e) :- escE(e).
+escEDep(e2) :- escEDep(e1), OrderedEE(e2,e1).
+
+localEDep(e) :- localE(e).
+localEDep(e1) :- localEDep(e2), OrderedEE(e2,e1).
+
