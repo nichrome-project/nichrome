@@ -3,9 +3,7 @@ package nichrome.mln.driver;
 import java.io.OutputStreamWriter;
 
 import org.kohsuke.args4j.CmdLineParser;
-import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.OptionHandlerFilter;
-import org.kohsuke.args4j.spi.OptionHandler;
 
 import nichrome.datalog.DlogRunner;
 import nichrome.mln.infer.Inferer;
@@ -14,7 +12,7 @@ import nichrome.mln.parser.CommandOptions;
 import nichrome.mln.util.Config;
 import nichrome.mln.util.Timer;
 import nichrome.mln.util.UIMan;
-import nichrome.util.AbstractBaseCommand;
+import nichrome.ursa.maymust.AlarmResolutionDriver;
 import nichrome.util.CommandInterface;
 
 public class MLNCommandLine extends CommandOptions implements CommandInterface {
@@ -33,7 +31,12 @@ public class MLNCommandLine extends CommandOptions implements CommandInterface {
 		} else if (isLearningMode) {
 			Learner learner = new Learner();
 			learner.learn(this);
-		} else {
+		} else if (this.alarmResolution){
+			AlarmResolutionDriver ard = new AlarmResolutionDriver();
+			ard.init(this);
+			ard.run();
+		}
+		else {
 			Inferer inferer = new Inferer();
 			inferer.infer(this);
 		}

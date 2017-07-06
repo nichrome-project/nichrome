@@ -42,8 +42,8 @@ public class Config {
 	public static String checkSolutionPath = null;
 	
 	public final static int MODEL_PICKER = 0;
-	public final static int PLID_PICKER = 1;
-	public final static int RANDOM_PICKER = 2;
+	public final static int RANDOM_PICKER = 1;
+//	public final static int PLID_PICKER = 2;
 
 	public final static String RANDOM_ALT_STRAT = "random_alt";
 	public final static String RANDOM_ORACLE_STRAT = "random_oracle";

@@ -7,6 +7,7 @@ import nichrome.mln.parser.CommandOptions;
 import nichrome.mln.util.Config;
 import nichrome.mln.util.Timer;
 import nichrome.mln.util.UIMan;
+import nichrome.ursa.maymust.AlarmResolutionDriver;
 
 public class Main {
 
@@ -23,7 +24,12 @@ public class Main {
 		} else if (options.isLearningMode) {
 			Learner learner = new Learner();
 			learner.learn(options);
-		} else {
+		} else if(options.alarmResolution){
+			AlarmResolutionDriver ard = new AlarmResolutionDriver();
+			ard.init(options);
+			ard.run();
+		} 
+		else {
 			Inferer inferer = new Inferer();
 			inferer.infer(options);
 		}

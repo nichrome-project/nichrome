@@ -41,6 +41,10 @@ public class CommandOptions extends AbstractBaseCommand {
 			/*Mode selection*/
 			"-parallel",
 			
+			/*URSA*/
+			"-queryFile","-oracleTuplesFile","-ursaSearchSpace","-ursaPreLabelledTuples",
+			"-pickBudget","-ursaClient","-picker","-appQuestions",
+			
 			/*Learning-related options*/
 			"-learnwt", "-lMaxIter",
 			};
@@ -238,7 +242,7 @@ public class CommandOptions extends AbstractBaseCommand {
 	@Option(name="-ursaPreLabelledTuples", usage="Tuples which are precise and can be labelled at beginning")
 	public String ursaPreLabelledTuples = null;
 	
-	@Option(name="-picker", usage=Config.MODEL_PICKER+". Model guided. "+Config.PLID_PICKER+". Oracle+batch. "+Config.RANDOM_PICKER+". Random.")
+	@Option(name="-picker", usage=Config.MODEL_PICKER+". Model guided. "+Config.RANDOM_PICKER+". Random.")
 	public int picker = Config.MODEL_PICKER;
 	
 	@Option(name="-ursaExternalModel", usage="Path to external model for ursa. If null, using oracle")
