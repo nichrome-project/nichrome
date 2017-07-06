@@ -23,15 +23,17 @@ public class AlarmResolver {
 	private Set<Integer> questionsAsked;
 	private Set<Integer> reportsResolved;
 	private MarkovLogicNetwork mln;
+	private boolean offPre;
 
 	public AlarmResolver(AnalysisWithAnnotations augAnalyzer, Oracle oracle, QuestionPicker picker,
-			Set<Integer> queries, MarkovLogicNetwork mln) {
+			Set<Integer> queries, MarkovLogicNetwork mln, boolean offPre) {
 		super();
 		this.augAnalyzer = augAnalyzer;
 		this.oracle = oracle;
 		this.picker = picker;
 		this.reports = queries;
 		this.mln = mln;
+		this.offPre = offPre;
 	}
 
 	/**
@@ -52,7 +54,8 @@ public class AlarmResolver {
 		this.reportsResolved = new HashSet<Integer>();
 		this.augAnalyzer.setOracle(oracle);
 		
-		this.picker.simplify(augAnalyzer);
+		if(!this.offPre)
+			this.picker.simplify(augAnalyzer);
 
 		// System.out.println("Enering analysis phase: ");
 		// this.augAnalyzer.analyze(oracle);

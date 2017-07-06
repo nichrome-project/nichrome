@@ -43,7 +43,7 @@ public class CommandOptions extends AbstractBaseCommand {
 			
 			/*URSA*/
 			"-queryFile","-oracleTuplesFile","-ursaSearchSpace","-ursaPreLabelledTuples",
-			"-pickBudget","-ursaClient","-picker","-appQuestions",
+			"-pickBudget","-ursaClient","-picker","-appQuestions","-offPre",
 			
 			/*Learning-related options*/
 			"-learnwt", "-lMaxIter",
@@ -250,6 +250,9 @@ public class CommandOptions extends AbstractBaseCommand {
 	
 	@Option(name="-appQuestions", usage="Path to file specifying app question tuples.")
 	public String appQuestionFile = null;
+	
+	@Option(name="-offPre", usage="Turn off preprocessing for URSA.")
+	public boolean turnOffPre = false;
 	
 	/**
 	 * Essential input/output

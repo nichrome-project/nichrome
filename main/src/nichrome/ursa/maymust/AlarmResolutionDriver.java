@@ -63,6 +63,7 @@ public class AlarmResolutionDriver {
 	private int picker;
 	private Oracle o;
 	private Set<Integer> appQuestions;
+	private boolean offPre;
 
 	public void init(CommandOptions options) {
 		Clause.mappingFromID2Const = new HashMap<Integer, String>();
@@ -97,6 +98,7 @@ public class AlarmResolutionDriver {
 		this.externalModelPath = options.ursaExtermalModel;
 		this.picker = options.picker;
 		this.o = null;
+		this.offPre = options.turnOffPre;
 	}
 
 	// Some pruning operation. Be very careful when the correlation rules are
@@ -186,7 +188,7 @@ public class AlarmResolutionDriver {
 		this.releaseMemory();
 		Oracle o = this.getOracle();
 		QuestionPicker picker = this.getPicker(anAnalysis);
-		AlarmResolver resolver = new AlarmResolver(anAnalysis, o, picker, this.queries, mln);
+		AlarmResolver resolver = new AlarmResolver(anAnalysis, o, picker, this.queries, mln,this.offPre);
 		resolver.prepolulate(preLabelled);
 		resolver.resolve();
 		System.out.println("AlarmResolver: Num of queries resolved " + resolver.getNumResolvedQueries());
@@ -892,7 +894,7 @@ public class AlarmResolutionDriver {
 					this.groundedClauses.add(gc);
 				}
 				else
-					System.out.println("Warning: fail to match "+line);
+					UIMan.verbose(3,"Warning: fail to match "+line);
 			}
 		} catch (IOException e) {
 			throw new RuntimeException(e);
