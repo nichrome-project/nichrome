@@ -292,7 +292,7 @@ if step == 2 or step == 12:
 	enterStep('URSA main loop')
 
 	eugene_jar = os.path.join(mlnInfDir, 'nichrome.jar')
-	eugene_conf = os.path.join(mlnInfDir, 'myeugene.conf')
+	eugene_conf = os.path.join(mlnInfDir, 'Nichrome.conf')
 	mln_src = os.path.join(mlnInfDir, 'src')
 	mln_files = os.path.join(chordMainDir, 'src/chord/analyses/ursa/datarace/datarace.mln')
 
