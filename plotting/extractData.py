@@ -108,8 +108,8 @@ def extractData(client, benchmarks, configs):
                     nfqs = int(tokens[1])
                     if len(mainData[bench]) == 0:
                         mainData[bench].append(nfqs)
-                        if mainData[bench] <= 1:
-                            mainData[bench] = nfqs
+                    elif mainData[bench][0] <= 1:
+                        mainData[bench][0] = nfqs
                 i+=1
                 # end iterating log file
             ifs.close()
