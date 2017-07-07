@@ -306,7 +306,6 @@ if step == 2 or step == 12:
 			cmd += ' -Dchord.bddbddb.work.dir=' + mlnInfBenchDir
 			cmd += ' -Dchord.dlog.analysis.path=' + mln_src
 			cmd += ' -Dchord.java.analysis.path=' + eugene_jar
-			cmd += ' -Djava.library.path=/home/xzhang/gurobi652/linux64/lib/'
 			cmd += ' -Dchord.reuse.rels=true -Dchord.run.analyses=thresc-dlog -Dchord.print.rels=escEDep,localEDep '
 			cmd += ' -jar ' + eugene_jar
                         cmd += ' MLN'
