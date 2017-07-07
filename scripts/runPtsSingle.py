@@ -9,6 +9,6 @@ settings=['oracle', 'dynamic']
 for setting in settings:
     cmd = 'python ./ursaCipaPts.py '+bench + ' ' +setting + ' '+code
     print 'Running '+cmd
-    process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE) 
+    process = subprocess.Popen(cmd, shell=True) 
     process.wait()
     print process.returncode
