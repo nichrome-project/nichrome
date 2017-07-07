@@ -55,7 +55,7 @@ def extractData(client, benchmarks, configs):
 
                 if len(mainData[bench]) == 0:
                     mainData[bench].append(1)
-                mainData[bench].append((1,1))
+                mainData[bench].append((0,1))
 
                 continue
             ifs = open(logFile)
