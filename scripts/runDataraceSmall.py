@@ -14,3 +14,13 @@ for bench in benches:
         process = subprocess.Popen(cmd, shell=True) 
         process.wait()
         print process.returncode
+
+bench = 'raytracer'
+
+setting = 'uniform'
+
+cmd = 'python ./ursaDatarace.py '+bench + ' ' +setting + + ' '+code
+print 'Running '+cmd
+process = subprocess.Popen(cmd, shell=True) 
+process.wait()
+print process.returncode
