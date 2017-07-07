@@ -3,7 +3,7 @@ import sys
 
 code = sys.argv[1]
 
-benches=['sor','elevator','raytracer','montecarlo']
+benches=['elevator','montecarlo']
 
 settings=['oracle', 'dynamic']
 

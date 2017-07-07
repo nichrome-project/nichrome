@@ -3,7 +3,7 @@ import sys
 
 code = sys.argv[1]
 
-benches=['sor','elevator','raytracer','montecarlo']
+benches=['elevator','montecarlo']
 
 settings=['bagged', 'oracle', 'dynamic', 'staticAggr', 'staticCons']
 
@@ -17,10 +17,3 @@ for bench in benches:
 
 bench = 'raytracer'
 
-setting = 'uniform'
-
-cmd = 'python ./ursaDatarace.py '+bench + ' ' +setting + ' '+code
-print 'Running '+cmd
-process = subprocess.Popen(cmd, shell=True) 
-process.wait()
-print process.returncode
