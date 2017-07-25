@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Random;
 
 import org.apache.commons.lang3.Pair;
 
@@ -85,6 +86,17 @@ public class AlarmResolver {
 //					throw new RuntimeException("Asking question on a tuple without labels: " + l);
 				if(l == null)
 					l = Label.TRUE;
+				
+				{// random inject noise
+					Random rand = new Random();
+					int x = rand.nextInt(100);
+					if(x < 10) {
+						Label noisy_l = (l == Label.TRUE) ? Label.FALSE : Label.TRUE;
+						System.out.println("Inject noise: l= " + Label.TRUE + " noisy_l= " + noisy_l);
+						l = noisy_l;
+					}
+				}
+				
 				labels.add(new Pair<Integer, Label>(q, l));
 				areAllQsFalse &= (l == Label.FALSE);
 				areAllQsTrue &= (l != Label.FALSE);
