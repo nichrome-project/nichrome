@@ -180,6 +180,31 @@ public class AlarmResolutionDriver {
 		for(int r : this.queries)
 			if(this.getOracle().resolve(r) == Label.FALSE && !output.isAtLabeled(r))
 				System.out.println(mln.getAtom(r).toGroundString(mln));
+		
+		{// for experiment of introducing random noise
+			int overall_queries = this.queries.size();
+			int resolved = output.labelMap.size();
+			int false_positive = 0;
+			int false_negative = 0;
+			
+			for(int r : this.queries){
+				Label l = output.getLabel(r);
+				if(l == null) {
+					++false_positive;
+					continue;
+				}
+				
+				if(this.getOracle().resolve(r) == Label.FALSE && l == Label.TRUE) {
+					++false_positive;
+				}
+				if(this.getOracle().resolve(r) == Label.TRUE && l == Label.FALSE) {
+					++false_negative;
+				}
+			}
+			
+			System.out.println("Overall_queries: " + overall_queries + " resolved: " + resolved 
+					+ " #FP: " + false_positive + " #FN: " + false_negative);
+		}
 	}
 	
 	public void run() {	
