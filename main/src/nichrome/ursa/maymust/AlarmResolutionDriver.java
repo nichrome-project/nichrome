@@ -183,16 +183,26 @@ public class AlarmResolutionDriver {
 		
 		{// for experiment of introducing random noise
 			int overall_queries = this.queries.size();
-			int resolved = output.labelMap.size();
+			//int resolved = output.labelMap.size();
 			int false_positive = 0;
 			int false_negative = 0;
+			int labels = 0;
 			
+			int labelNull_oracle_true = 0;
+			int labelNull_oracle_false = 0;
 			for(int r : this.queries){
 				Label l = output.getLabel(r);
 				if(l == null) {
-					++false_positive;
+					if(this.getOracle().resolve(r) == Label.TRUE) {
+						++ labelNull_oracle_true;
+					}
+					if(this.getOracle().resolve(r) == Label.FALSE) {
+						++ labelNull_oracle_false;
+					}
 					continue;
 				}
+				
+				++labels;
 				
 				if(this.getOracle().resolve(r) == Label.FALSE && l == Label.TRUE) {
 					++false_positive;
@@ -202,8 +212,9 @@ public class AlarmResolutionDriver {
 				}
 			}
 			
-			System.out.println("Overall_queries: " + overall_queries + " resolved: " + resolved 
-					+ " #FP: " + false_positive + " #FN: " + false_negative);
+			System.out.println("Overall_queries: " + overall_queries + " labels: " + labels 
+					+ " #FP: " + false_positive + " #FN: " + false_negative 
+					+ " labelNull_oracle_true: " + labelNull_oracle_true + " labelNull_oracle_false: " + labelNull_oracle_false);
 		}
 	}
 	
