@@ -193,8 +193,9 @@ public class AlarmResolutionDriver {
 			for(int r : this.queries){
 				Label l = output.getLabel(r);
 				if(l == null) {
-					if(this.getOracle().resolve(r) == Label.TRUE) {
-						++ labelNull_oracle_true;
+					//if(this.getOracle().resolve(r) == Label.TRUE) {
+					if(this.getOracle().resolve(r) != Label.FALSE) {
+								++ labelNull_oracle_true;
 					}
 					if(this.getOracle().resolve(r) == Label.FALSE) {
 						++ labelNull_oracle_false;
@@ -207,7 +208,8 @@ public class AlarmResolutionDriver {
 				if(this.getOracle().resolve(r) == Label.FALSE && l == Label.TRUE) {
 					++false_positive;
 				}
-				if(this.getOracle().resolve(r) == Label.TRUE && l == Label.FALSE) {
+				//if(this.getOracle().resolve(r) == Label.TRUE && l == Label.FALSE) {
+				if(this.getOracle().resolve(r) != Label.FALSE && l == Label.FALSE) {
 					++false_negative;
 				}
 			}
