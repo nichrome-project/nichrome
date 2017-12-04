@@ -1,0 +1,3 @@
+[submodule "main/libsrc/libdai"]
+	path = main/libsrc/libdai
+	url = git@bitbucket.org:psl-lab/libdai.git
