@@ -1,5 +1,6 @@
 # ignore temp files
 *~
+.*.sw*
 
 # ignore eclipse configs
 .project
@@ -14,3 +15,4 @@ nichrome.jar
 nichrome_incubator.jar
 bin/
 classes/
+main/lib/bingo
