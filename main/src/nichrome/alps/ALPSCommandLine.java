@@ -27,7 +27,35 @@ public class ALPSCommandLine extends AbstractBaseCommand implements CommandInter
     
     @Option(name="-D", metaVar="<path>", required=true, usage="specify the data file")
     private String dataFile;
-    
+   
+	@Option(name="-a", metaVar="<number>", usage="maximum number of augmentations")
+	private Integer augmentations = 0;
+
+	@Option(name="-b", metaVar="<number>", usage="maximum number of bindings")
+	private Integer bindings = 0;
+
+	@Option(name="-1", usage="enable chain1 template")
+	private Boolean chain1 = false;
+
+	@Option(name="-2", usage="enable chain2 template")
+	private Boolean chain2 = false;
+
+	@Option(name="-3", usage="enable chain3 template")
+	private Boolean chain3 = false;
+
+	@Option(name="-f1", usage="enable filter1 augmentation")
+	private Boolean filter1 = false;
+
+	@Option(name="-f2", usage="enable filter2 augmentation")
+	private Boolean filter2 = false;
+
+	@Option(name="-hb", usage="allow bindings in head")
+	private Boolean headBinding = false;
+
+
+
+
+
 
 	@Override
 	public boolean execute() {
@@ -51,6 +79,16 @@ public class ALPSCommandLine extends AbstractBaseCommand implements CommandInter
 		alps.dataFile = dataFile;
 		alps.K = K;
 		alps.M = M;
+
+		alps.augmentations = augmentations;
+		alps.bindings = bindings;
+		alps.enableChain1 = chain1;
+		alps.enableChain2 = chain2;
+		alps.enableChain3 = chain3;
+		alps.enableHeadBinding = headBinding;
+		alps.enableFilter1 = filter1;
+		alps.enableFilter2 = filter2;
+
 		
 		
 		alps.learn();
